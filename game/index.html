@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solaris Bay — Paloma Del Sol</title>
+<link rel="stylesheet" href="styles/hud.css">
+</head>
+<body>
+<div id="game-container"></div>
+
+<!-- In-game HUD -->
+<div id="hud" style="display:none">
+  <div id="top-left">
+    <div class="bar-row"><span class="bar-label">HP</span><div class="bar"><div id="hp-fill" class="fill hp"></div></div></div>
+    <div class="bar-row"><span class="bar-label">ARMOR</span><div class="bar"><div id="armor-fill" class="fill armor"></div></div></div>
+    <div id="cash">$500</div>
+    <div id="weapon-box"><span id="weapon">Pistol</span> <span id="ammo">12 / ∞</span></div>
+  </div>
+  <div id="top-center">
+    <div id="stars"></div>
+    <div id="district"></div>
+  </div>
+  <div id="top-right">
+    <canvas id="minimap" width="180" height="180"></canvas>
+    <div id="speed">0 km/h</div>
+  </div>
+  <div id="objective"></div>
+  <div id="subtitle"></div>
+  <div id="prompt"></div>
+  <div id="toast"></div>
+  <div id="hud-buttons">
+    <button id="btn-music" title="Toggle music">♪</button>
+    <button id="btn-mute" title="Mute">🔊</button>
+  </div>
+</div>
+<div id="damage-flash"></div>
+
+<!-- Start screen -->
+<div id="start-screen" class="overlay">
+  <div class="panel">
+    <h1>SOLARIS BAY</h1>
+    <h2>Paloma Del Sol — an original open-world crime game</h2>
+    <p class="tagline">Mateo Reyes is back on the streets. Five jobs stand between him and the Paloma Vault. Steal cars, dodge the Paloma PD, and take the final score.</p>
+    <div class="btn-row">
+      <button id="btn-new" class="big">▶ New Game</button>
+      <button id="btn-continue" class="big">Continue</button>
+    </div>
+    <div class="btn-row">
+      <button id="btn-controls">Controls</button>
+    </div>
+    <p class="fine">WASD move / drive &nbsp;·&nbsp; Mouse look &amp; aim &nbsp;·&nbsp; Click shoot &nbsp;·&nbsp; E enter car &nbsp;·&nbsp; Shift sprint &nbsp;·&nbsp; Space handbrake &nbsp;·&nbsp; M map &nbsp;·&nbsp; Esc pause</p>
+    <p class="fine">100% original — no Rockstar / GTA content. Built for the make.fun GTA 6 bounty.</p>
+  </div>
+</div>
+
+<!-- Pause menu -->
+<div id="pause-menu" class="overlay" style="display:none">
+  <div class="panel">
+    <h1>PAUSED</h1>
+    <div class="btn-col">
+      <button id="btn-resume" class="big">Resume</button>
+      <button id="btn-save">Save Game</button>
+      <button id="btn-load">Load Save</button>
+      <button id="btn-restart">Restart Story</button>
+      <button id="btn-quit">Quit to Title</button>
+    </div>
+  </div>
+</div>
+
+<!-- Full map -->
+<div id="map-overlay" class="overlay" style="display:none">
+  <div class="panel wide">
+    <h1>PALOMA DEL SOL — CITY MAP</h1>
+    <canvas id="map-canvas" width="640" height="640"></canvas>
+    <div class="btn-row"><button id="btn-map-close">Close [M]</button></div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div id="controls-overlay" class="overlay" style="display:none">
+  <div class="panel">
+    <h1>CONTROLS</h1>
+    <table class="controls-table">
+      <tr><td>W A S D</td><td>Move / drive</td></tr>
+      <tr><td>Shift</td><td>Sprint</td></tr>
+      <tr><td>Mouse</td><td>Look / aim (click to lock)</td></tr>
+      <tr><td>Left Click</td><td>Shoot</td></tr>
+      <tr><td>1 / 2 / 3</td><td>Pistol / SMG / Shotgun</td></tr>
+      <tr><td>R</td><td>Reload</td></tr>
+      <tr><td>E / F</td><td>Enter or hijack vehicle / interact / exit</td></tr>
+      <tr><td>Space</td><td>Handbrake / drift (driving)</td></tr>
+      <tr><td>M</td><td>City map</td></tr>
+      <tr><td>N</td><td>Music on / off</td></tr>
+      <tr><td>Esc</td><td>Pause</td></tr>
+    </table>
+    <div class="btn-row"><button id="btn-controls-close">Close</button></div>
+  </div>
+</div>
+
+<!-- Armory shop -->
+<div id="shop-overlay" class="overlay" style="display:none">
+  <div class="panel">
+    <h1>ARMORY</h1>
+    <div id="shop-items"></div>
+  </div>
+</div>
+
+<!-- Game over -->
+<div id="gameover" class="overlay" style="display:none">
+  <div class="panel">
+    <h1>BUSTED / WASTED</h1>
+    <p class="tagline">Mateo went down in Paloma Del Sol. The city keeps moving without him.</p>
+    <div class="btn-row"><button id="btn-retry" class="big">Retry Mission</button></div>
+  </div>
+</div>
+
+<!-- Victory -->
+<div id="victory" class="overlay" style="display:none">
+  <div class="panel">
+    <h1>LEGEND OF PALOMA</h1>
+    <p class="tagline">The Vault is empty, the cops are behind you, and Paloma Del Sol is yours, Mateo.</p>
+    <p id="victory-stats"></p>
+    <div class="btn-row">
+      <button id="btn-victory-roam" class="big">Keep Roaming</button>
+      <button id="btn-victory-restart">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="src/config.js"></script>
+<script src="src/world/textureFactory.js"></script>
+<script src="src/world/skyLighting.js"></script>
+<script src="src/world/cityGenerator.js"></script>
+<script src="src/audio/soundEngine.js"></script>
+<script src="src/entities/vehiclePhysics.js"></script>
+<script src="src/entities/playerController.js"></script>
+<script src="src/entities/trafficSystem.js"></script>
+<script src="src/entities/pedestrianSystem.js"></script>
+<script src="src/entities/policeSystem.js"></script>
+<script src="src/gameplay/combatSystem.js"></script>
+<script src="src/gameplay/missionManager.js"></script>
+<script src="src/gameplay/saveSystem.js"></script>
+<script src="src/ui/hudManager.js"></script>
+<script src="src/ui/minimapRenderer.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

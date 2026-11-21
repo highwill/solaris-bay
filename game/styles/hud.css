@@ -1,0 +1,56 @@
+/* Solaris Bay — HUD and overlay styling. */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1526; font-family: Arial, Helvetica, sans-serif; }
+#game-container, #game-container canvas { position: fixed; inset: 0; display: block; }
+
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; color: #fff; }
+#top-left { position: absolute; top: 14px; left: 14px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+.bar-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.bar-label { font-size: 11px; font-weight: bold; letter-spacing: 1px; width: 44px; }
+.bar { width: 190px; height: 13px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.45); border-radius: 3px; overflow: hidden; }
+.fill { height: 100%; transition: width 0.15s; }
+.fill.hp { background: linear-gradient(90deg, #27ae60, #2ecc71); width: 100%; }
+.fill.armor { background: linear-gradient(90deg, #2471a3, #5dade2); width: 0%; }
+#cash { font-size: 24px; font-weight: bold; color: #7dff8a; margin-top: 4px; }
+#weapon-box { font-size: 15px; margin-top: 2px; color: #ffe9a8; }
+#weapon-box #ammo { color: #fff; margin-left: 8px; }
+
+#top-center { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); text-align: center; }
+#stars { font-size: 30px; letter-spacing: 4px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+#stars .star { color: rgba(255,255,255,0.25); }
+#stars .star.on { color: #ffd21f; }
+#district { margin-top: 4px; font-size: 20px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: opacity 0.8s; }
+
+#top-right { position: absolute; top: 14px; right: 14px; text-align: right; }
+#minimap { border: 2px solid rgba(255,255,255,0.5); border-radius: 4px; background: #10151c; box-shadow: 0 2px 10px rgba(0,0,0,0.6); }
+#speed { font-size: 22px; font-weight: bold; margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+
+#objective { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); font-size: 17px; font-weight: bold; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,215,106,0.7); color: #ffd76a; padding: 8px 16px; border-radius: 4px; max-width: 80%; text-align: center; }
+#subtitle { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); font-size: 16px; font-style: italic; background: rgba(0,0,0,0.6); color: #fff; padding: 7px 14px; border-radius: 4px; max-width: 82%; text-align: center; display: none; }
+#prompt { position: absolute; left: 50%; bottom: 140px; transform: translateX(-50%); font-size: 16px; font-weight: bold; background: rgba(0,0,0,0.65); color: #9dff8a; padding: 6px 12px; border-radius: 4px; display: none; }
+#toast { position: absolute; left: 50%; top: 110px; transform: translateX(-50%); font-size: 18px; font-weight: bold; background: rgba(0,0,0,0.7); color: #ffd76a; padding: 9px 18px; border-radius: 4px; opacity: 0; transition: opacity 0.4s; text-align: center; max-width: 84%; }
+#hud-buttons { position: absolute; right: 14px; bottom: 14px; pointer-events: auto; display: flex; gap: 8px; }
+#hud-buttons button { width: 40px; height: 40px; font-size: 19px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.5); background: rgba(0,0,0,0.55); color: #fff; cursor: pointer; }
+
+#damage-flash { position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(255,0,0,0.55) 100%); opacity: 0; pointer-events: none; z-index: 9; transition: opacity 0.15s; }
+
+.overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(5, 10, 20, 0.55); z-index: 20; }
+.panel { background: rgba(10, 16, 28, 0.92); border: 1px solid rgba(255, 215, 106, 0.55); border-radius: 10px; padding: 28px 34px; max-width: 640px; width: 92%; text-align: center; color: #fff; box-shadow: 0 8px 40px rgba(0,0,0,0.7); }
+.panel.wide { max-width: 760px; }
+.panel h1 { font-size: 42px; letter-spacing: 4px; color: #ffd76a; margin-bottom: 8px; }
+.panel h2 { font-size: 17px; font-weight: normal; color: #9fd4ff; margin-bottom: 14px; }
+.tagline { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 18px; }
+.fine { font-size: 12px; color: #9aa7b5; margin-top: 12px; line-height: 1.6; }
+.btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.btn-col { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+button { font-family: inherit; font-size: 16px; padding: 10px 22px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); background: #1c2a44; color: #fff; cursor: pointer; }
+button:hover { background: #2a3d5f; }
+button.big { font-size: 19px; font-weight: bold; padding: 13px 28px; background: #b03a2e; border-color: #ff8a7a; }
+button.big:hover { background: #c94a3c; }
+.controls-table { margin: 10px auto; border-collapse: collapse; font-size: 15px; text-align: left; }
+.controls-table td { padding: 5px 16px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.controls-table td:first-child { font-weight: bold; color: #ffd76a; }
+#map-canvas { border: 2px solid rgba(255,255,255,0.5); border-radius: 6px; max-width: 100%; height: auto; }
+.shop-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 16px; }
+.shop-row button { font-size: 14px; padding: 7px 14px; }
+#victory-stats { font-size: 17px; color: #7dff8a; margin-bottom: 10px; }
