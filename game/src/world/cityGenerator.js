@@ -119,18 +119,54 @@ window.SB = window.SB || {};
       pastelPink: facadeMat('#e8a0a8', 'pastel', 0.5),
       pastelMint: facadeMat('#9fd4c0', 'pastel', 0.5),
       pastelCream: facadeMat('#f2ddb0', 'pastel', 0.45),
+      pastelCoral: facadeMat('#e88a6d', 'pastel', 0.5),
+      pastelLav: facadeMat('#b9a7e0', 'pastel', 0.5),
+      pastelTeal: facadeMat('#7fc4c9', 'pastel', 0.5),
       warehouse: facadeMat('#7a6a58', 'warehouse', 0.25),
       villa: facadeMat('#e8dcc0', 'villa', 0.4),
       mid: facadeMat('#8a7f72', 'villa', 0.35),
       mid2: facadeMat('#6e7d8c', 'glass', 0.35),
     };
     var roofMat = new THREE.MeshStandardMaterial({ color: 0x3a3a40, roughness: 1 });
+    var neonTexts = [['PALOMA', '#ff5ce1'], ['HOTEL SOL', '#ffd21f'], ['CASINO', '#37f2c8'], ['SOLARIS', '#ff8a3c'], ['NEON BAY', '#7ad9ff'], ['EL MAR', '#ff5c7a']];
+    var neonIdx = 0;
 
     function building(b, w, h, d, mat) {
       var m = box(w, h, d, mat, b.cx, h / 2, b.cz, 0);
       box(w + 1, 1.2, d + 1, roofMat, b.cx, h + 0.6, b.cz, 0);
+      // rooftop clutter: AC units, water tower, antenna
+      if (rng() < 0.55) box(3, 1.6, 3, new THREE.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.9 }), b.cx - w / 4, h + 2, b.cz + d / 4, 0);
+      if (rng() < 0.3) {
+        var tw = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 3.4, 8), new THREE.MeshStandardMaterial({ color: 0x8a6a48, roughness: 1 }));
+        tw.position.set(b.cx + w / 4, h + 3.4, b.cz - d / 4); tw.castShadow = true; group.add(tw);
+        var tc = new THREE.Mesh(new THREE.ConeGeometry(2.6, 2, 8), new THREE.MeshStandardMaterial({ color: 0x6e5238, roughness: 1 }));
+        tc.position.set(b.cx + w / 4, h + 6, b.cz - d / 4); group.add(tc);
+      }
       addCollider(b.cx, b.cz, w / 2 + 0.5, d / 2 + 0.5);
       return m;
+    }
+
+    function neonSign(x, y, z, ry) {
+      var nt = neonTexts[neonIdx % neonTexts.length]; neonIdx++;
+      var p = new THREE.Mesh(
+        new THREE.PlaneGeometry(26, 6.5),
+        new THREE.MeshBasicMaterial({ map: SB.textures.neon(nt[0], nt[1]), transparent: true, side: THREE.DoubleSide })
+      );
+      p.position.set(x, y, z);
+      p.rotation.y = ry;
+      group.add(p);
+      return p;
+    }
+
+    function awning(x, y, z, w, color) {
+      var a = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, 3),
+        new THREE.MeshStandardMaterial({ map: SB.textures.awning(color, '#f5f0e0'), roughness: 0.9, side: THREE.DoubleSide })
+      );
+      a.position.set(x, y, z);
+      a.rotation.x = -0.5;
+      group.add(a);
+      return a;
     }
 
     // ---- districts ----------------------------------------------------------
@@ -143,9 +179,20 @@ window.SB = window.SB || {};
         var h = 60 + rng() * 85;
         building(b, 34 + rng() * 14, h, 34 + rng() * 14, roll < 0.5 ? mats.glass : mats.glass2);
         if (rng() < 0.4) building({ cx: b.cx + 28, cz: b.cz - 28 }, 16, 24 + rng() * 20, 16, mats.mid2);
+        // neon crown on tall towers + rooftop antenna
+        if (h > 95 && rng() < 0.75) neonSign(b.cx, h - 6, b.cz + 18, 0);
+        if (h > 110) {
+          var ant = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 16, 6), new THREE.MeshStandardMaterial({ color: 0x222226, roughness: 0.6, metalness: 0.6 }));
+          ant.position.set(b.cx, h + 9, b.cz); group.add(ant);
+          var tip = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff2222, emissive: 0xff0000, emissiveIntensity: 2 }));
+          tip.position.set(b.cx, h + 17.5, b.cz); group.add(tip);
+        }
       } else if (d.id === 'miramar') {
-        var mat = [mats.pastelPink, mats.pastelMint, mats.pastelCream][Math.floor(rng() * 3)];
-        building(b, 26 + rng() * 10, 18 + rng() * 26, 20 + rng() * 8, mat);
+        var mat = [mats.pastelPink, mats.pastelMint, mats.pastelCream, mats.pastelCoral, mats.pastelLav, mats.pastelTeal][Math.floor(rng() * 6)];
+        var bh = 18 + rng() * 26;
+        building(b, 26 + rng() * 10, bh, 20 + rng() * 8, mat);
+        // striped shop awning on the street side + a neon box
+        awning(b.cx, 4.6, b.cz + 11, 16, ['#ff5c7a', '#37f2c8', '#ffd21f'][Math.floor(rng() * 3)]);
         if (rng() < 0.5) box(8, 3, 8, new THREE.MeshStandardMaterial({ color: 0xff7ad9, emissive: 0xff4fd8, emissiveIntensity: 0.9 }), b.cx, 20 + rng() * 20, b.cz, 0);
       } else if (d.id === 'docks') {
         if (rng() < 0.55) {
@@ -196,6 +243,20 @@ window.SB = window.SB || {};
     for (var pz = -570; pz <= 570; pz += 60) { if (Math.abs(pz) < 90) continue; palm(-548, pz, 0.9); }
     for (var pi = 0; pi < 14; pi++) palm(-420 + rng() * 700, -560 + rng() * 220, 0.8 + rng() * 0.5);
     if (plazaBlock) { palm(plazaBlock.cx - 30, plazaBlock.cz - 30, 1); palm(plazaBlock.cx + 30, plazaBlock.cz + 30, 1); palm(plazaBlock.cx + 30, plazaBlock.cz - 30, 1); palm(plazaBlock.cx - 30, plazaBlock.cz + 30, 1); }
+
+    // ---- beach props: umbrellas + towels along the sand ----------------------
+    var umbCols = [0xff5c7a, 0xffd21f, 0x37f2c8, 0x7ad9ff, 0xff8a3c];
+    for (var ui = 0; ui < 12; ui++) {
+      var uz = -560 + ui * 100 + rng() * 30;
+      var ux = -590 + rng() * 18;
+      var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 3.2, 6), new THREE.MeshStandardMaterial({ color: 0x8a8a86, roughness: 0.8, metalness: 0.3 }));
+      pole.position.set(ux, 1.6, uz); group.add(pole);
+      var umb = new THREE.Mesh(new THREE.ConeGeometry(3.4, 1.4, 8), new THREE.MeshStandardMaterial({ color: umbCols[ui % umbCols.length], roughness: 0.9, side: THREE.DoubleSide }));
+      umb.position.set(ux, 3.4, uz); umb.castShadow = true; group.add(umb);
+      var towel = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 4.4), new THREE.MeshStandardMaterial({ color: umbCols[(ui + 2) % umbCols.length], roughness: 1 }));
+      towel.rotation.x = -Math.PI / 2; towel.rotation.z = rng() * 0.8;
+      towel.position.set(ux + 4 + rng() * 3, 0.06, uz + 3); group.add(towel);
+    }
 
     // ---- streetlights ---------------------------------------------------------
     var poleMat = new THREE.MeshStandardMaterial({ color: 0x2c2c30, roughness: 0.7, metalness: 0.5 });

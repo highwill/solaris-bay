@@ -44,6 +44,8 @@ window.SB = window.SB || {};
       alive: true, shootT: 1 + Math.random(), moveT: 0, diedAt: 0,
       x: x, z: z,
     };
+    // same carRef mechanism as cars: playerShoot resolves hits by this ref
+    g.userData.enemyRef = e;
     enemies.push(e);
     return e;
   }
@@ -111,9 +113,9 @@ window.SB = window.SB || {};
     var w = SB.CONFIG.WEAPONS[P.weapon];
     if (G.time - P.lastShot < w.rate) return;
     if (P.reloading > 0) return;
-    if (P.magAmmo <= 0) { reload(G); return; }
+    if (w.mag > 0 && P.magAmmo <= 0) { reload(G); return; } // fists never need ammo
     P.lastShot = G.time;
-    P.magAmmo--;
+    if (w.mag > 0) P.magAmmo--;
     G.lastShotAt = G.time;
     G.lastShotPos = { x: P.pos.x, z: P.pos.z };
     if (G.sound) G.sound.gunshot();
@@ -132,6 +134,7 @@ window.SB = window.SB || {};
       G.cars.forEach(function (c) { if (!c.wrecked) targets.push(c.mesh); });
       var hits = raycaster.intersectObjects(targets, true);
       var end = origin.clone().addScaledVector(dir, w.range);
+      if (hits.length && hits[0].distance > w.range) hits = []; // weapon range cap (fists = melee)
       if (hits.length) {
         var h = hits[0];
         end = h.point.clone();
@@ -174,7 +177,10 @@ window.SB = window.SB || {};
     e.mesh.position.y = 0.4;
     burst(G, e.mesh.position.clone().setY(1.2), 0xcc2222, 14, 6);
     if (Math.random() < 0.45) spawnPickup(G, e.x + (Math.random() - 0.5) * 2, e.z + (Math.random() - 0.5) * 2, Math.random() < 0.5 ? 'health' : 'armor');
-    if (e.type === 'officer' || e.type === 'guard') G.police.addHeat(1);
+    if (e.type === 'officer' || e.type === 'guard') {
+      G.police.addHeat(1);
+      G.rep += 10; // respect for dropping a made man
+    }
   }
 
   function updateEnemies(G, dt) {

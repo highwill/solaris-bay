@@ -56,9 +56,10 @@ window.SB = window.SB || {};
   G.sound = SB.createSound(G);
   SB.combat.init(G);
   G.player = SB.createPlayer(G);
-  G.traffic = SB.createTraffic(G, 10);
-  G.peds = SB.createPedestrians(G, 22);
+  G.traffic = SB.createTraffic(G, 16);
+  G.peds = SB.createPedestrians(G, 30);
   G.police = SB.createPolice(G);
+  G.heli = SB.createHelicopter(G);
   G.missions = SB.createMissions(G);
   G.hud = SB.createHud(G);
   G.minimap = SB.createMinimap(G);
@@ -93,7 +94,7 @@ window.SB = window.SB || {};
         G.player.exitCar();
       }
     }
-    if (e.code === 'KeyN') { G.sound.setMusic(!G._musicOn); G._musicOn = !G._musicOn; }
+    if (e.code === 'KeyN') { var stn = G.sound.cycleStation(); G.hud.toast('RADIO: ' + stn); }
   });
   window.addEventListener('keyup', function (e) { G.keys[e.code] = false; });
   window.addEventListener('blur', function () { G.keys = {}; G.mouseDown = false; });
@@ -112,10 +113,10 @@ window.SB = window.SB || {};
     var P = G.player.P;
     if (document.pointerLockElement === canvas) {
       P.yaw -= e.movementX * 0.0024;
-      P.pitch = SB.clamp(P.pitch + e.movementY * 0.002, -0.4, 1.1);
+      P.pitch = SB.clamp(P.pitch - e.movementY * 0.002, -0.4, 1.1);
     } else if (dragging && G.started && !G.paused) {
       P.yaw -= (e.clientX - lastMX) * 0.005;
-      P.pitch = SB.clamp(P.pitch + (e.clientY - lastMY) * 0.003, -0.4, 1.1);
+      P.pitch = SB.clamp(P.pitch - (e.clientY - lastMY) * 0.003, -0.4, 1.1);
       lastMX = e.clientX; lastMY = e.clientY;
     }
   });
@@ -194,7 +195,7 @@ window.SB = window.SB || {};
   });
   bind('btn-victory-roam', function () { G.hud.show('victory', false); });
   bind('btn-victory-restart', function () { location.reload(); });
-  bind('btn-music', function () { G._musicOn = !G._musicOn; G.sound.setMusic(G._musicOn); });
+  bind('btn-music', function () { var stn = G.sound.cycleStation(); G.hud.toast('RADIO: ' + stn); });
   bind('btn-mute', function () {
     var m = G.sound.toggleMute();
     document.getElementById('btn-mute').textContent = m ? '🔇' : '🔊';
@@ -320,6 +321,8 @@ window.SB = window.SB || {};
       G.traffic.update(dt);
       G.peds.update(dt);
       G.police.update(dt);
+      G.heli.update(dt);
+      SB.updateSkids(G, dt);
       // Shot 1: keep the two chase cruisers framed ahead of the player car
       // (the police AI still flashes their lightbars; we only fix their frame).
       if (shotMode === '1' && G._shotCruisers && G.player.P.car) {
@@ -420,6 +423,80 @@ window.SB = window.SB || {};
       loaded.cash = 777;
       G.save.applySave(G, loaded);
       check('apply-save', G.cash === 777);
+      // mission 3: lure the patrols east, then lose the heat
+      G.missions.startMission(2);
+      check('m3-started', G.missions.M.active && G.missions.M.index === 2 && G.wanted === 2);
+      P.pos.set(420, 0, -420);
+      for (var a = 0; a < 30; a++) step(1 / 60);
+      check('m3-stage1-lured', G.missions.M.stage === 1);
+      G.police.setWanted(0, false);
+      for (var b = 0; b < 30; b++) step(1 / 60);
+      check('m3-complete', G.missions.M.index === 3);
+      // mission 4: disable the armored van by shooting it, then grab the case
+      G.missions.startMission(3);
+      check('m4-van-spawned', !!G.missionVan && G.missionVan.hp === 300);
+      var van = G.missionVan;
+      // The van patrols the z=60 boulevard in a straight line: stand on that
+      // road behind it and shoot down the line, so its speed cannot dodge
+      // the aim (only a traffic car between us can absorb a shot, and it
+      // wrecks after 3 hits, so the loop keeps going).
+      P.pos.set(van.mesh.position.x - 25, 0, 60);
+      P.yaw = -Math.PI / 2; // face east, down the boulevard
+      step(0.5); // snap the camera behind the player (k=1 at big dt)
+      var shots = 0;
+      while (!G.missionVan.wrecked && !G.missions.M.vanDisabled && shots < 20) {
+        // keep closing the distance: the van outruns the pistol's 110m
+        // range in ~4s, so reposition to 25m behind it every shot
+        P.pos.set(van.mesh.position.x - 25, 0, 60);
+        var dirx = van.mesh.position.x - P.pos.x;
+        P.yaw = dirx >= 0 ? -Math.PI / 2 : Math.PI / 2; // stay on the road line
+        step(0.15); // camera snap to the new facing
+        // the harness drives step() directly without rendering, so the
+        // scene matrices are stale — refresh them or the raycast tests
+        // the van at its spawn position instead of where it drove to
+        G.scene.updateMatrixWorld(true);
+        SB.combat.playerShoot(G);
+        shots++;
+        for (var d2 = 0; d2 < 20; d2++) step(1 / 60);
+      }
+      check('m4-van-disabled', G.missions.M.vanDisabled || G.missionVan.wrecked);
+      check('m4-case-spawned', G.missions.M.caseSpawned === true);
+      P.pos.set(van.mesh.position.x, 0, van.mesh.position.z);
+      for (var e2 = 0; e2 < 30; e2++) step(1 / 60);
+      check('m4-complete', G.missions.M.index === 4);
+      // mission 5: vault infiltration, 8 guards, 4-star getaway
+      G.missions.startMission(4);
+      check('m5-started', G.missions.M.active && G.missions.M.index === 4);
+      P.pos.set(60, 0, -60);
+      for (var f = 0; f < 30; f++) step(1 / 60);
+      check('m5-stage1-guards-8', G.missions.M.stage === 1 && G.missions.M.guards.length === 8);
+      G.missions.M.guards.slice().forEach(function (en) { SB.combat.killEnemy(G, en); });
+      for (var g2 = 0; g2 < 30; g2++) step(1 / 60);
+      check('m5-stage2-getaway', G.missions.M.stage === 2 && G.wanted === 4);
+      check('m5-heli-active', !!G.heli && G.heli.active);
+      P.pos.set(-420, 0, -420);
+      for (var h2 = 0; h2 < 30; h2++) step(1 / 60);
+      check('m5-complete', G.missions.M.done === true && G.missions.M.index === 5);
+      // armory: buy the SMG through the real shop DOM
+      G.cash = 5000;
+      G.hud.openShop();
+      var buyBtn = document.querySelector('#shop-items button[data-buy="smg"]');
+      check('armory-shop-open', !!buyBtn);
+      if (buyBtn) buyBtn.click();
+      check('armory-smg-bought', !!(P.weapons.smg && P.weapons.smg.owned) && G.cash === 5000 - 1200);
+      G.hud.closeShop();
+      // spray garage: respray clears heat for $200
+      if (P.car) G.player.exitCar();
+      G.police.setWanted(2, true);
+      G.cash = 5000;
+      P.pos.set(180, 0, 300);
+      G.missions.interact();
+      check('spray-clears-heat', G.wanted === 0 && G.cash === 5000 - 200);
+      // safe house: saving on the spot writes a real save
+      P.pos.set(-420, 0, -420);
+      G.missions.interact();
+      var sv = G.save.load();
+      check('safehouse-saves', !!sv && sv.cash === G.cash);
     } catch (err) {
       res.push('FAIL:exception:' + (err && err.message ? err.message : err));
     }

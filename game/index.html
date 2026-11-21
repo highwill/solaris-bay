@@ -16,21 +16,45 @@
     <div class="bar-row"><span class="bar-label">ARMOR</span><div class="bar"><div id="armor-fill" class="fill armor"></div></div></div>
     <div id="cash">$500</div>
     <div id="weapon-box"><span id="weapon">Pistol</span> <span id="ammo">12 / ∞</span></div>
+    <div id="rank-bar"><span id="rank-name">RANK: ROOKIE</span><div class="bar small"><div id="rank-fill" class="fill rank"></div></div><span id="rank-rp">0 RP</span></div>
+    <div id="mission-panel" style="display:none">
+      <div id="mission-title">JOB</div>
+      <div id="mission-stages"></div>
+      <div id="mission-timer"></div>
+      <div id="mission-next"></div>
+    </div>
   </div>
   <div id="top-center">
     <div id="stars"></div>
     <div id="district"></div>
+    <div id="clock">17:24 ☀</div>
   </div>
   <div id="top-right">
     <canvas id="minimap" width="180" height="180"></canvas>
     <div id="speed">0 km/h</div>
+    <div id="vehicle-panel" style="display:none">
+      <div id="vehicle-name">Veloce GT</div>
+      <div class="bar small"><div id="vehicle-cond" class="fill cond"></div></div>
+      <div id="vehicle-cond-text">CONDITION 100%</div>
+      <div id="vehicle-gear">GEAR N</div>
+    </div>
+    <div id="dispatch-panel" style="display:none">
+      <div class="dispatch-head">📡 PD DISPATCH</div>
+      <div id="dispatch-rows"></div>
+    </div>
+  </div>
+  <div id="weapon-slots"></div>
+  <div id="dialogue" style="display:none">
+    <canvas id="portrait" width="64" height="64"></canvas>
+    <div class="dialogue-body"><div id="dialogue-name">ELENA VANCE</div><div id="dialogue-text"></div></div>
   </div>
   <div id="objective"></div>
   <div id="subtitle"></div>
   <div id="prompt"></div>
   <div id="toast"></div>
+  <div id="radio-line"></div>
   <div id="hud-buttons">
-    <button id="btn-music" title="Toggle music">♪</button>
+    <button id="btn-music" title="Radio station (N)">♪</button>
     <button id="btn-mute" title="Mute">🔊</button>
   </div>
 </div>
@@ -86,12 +110,12 @@
       <tr><td>Shift</td><td>Sprint</td></tr>
       <tr><td>Mouse</td><td>Look / aim (click to lock)</td></tr>
       <tr><td>Left Click</td><td>Shoot</td></tr>
-      <tr><td>1 / 2 / 3</td><td>Pistol / SMG / Shotgun</td></tr>
+      <tr><td>1 / 2 / 3 / 4</td><td>Fists / Pistol / SMG / Shotgun</td></tr>
       <tr><td>R</td><td>Reload</td></tr>
       <tr><td>E / F</td><td>Enter or hijack vehicle / interact / exit</td></tr>
       <tr><td>Space</td><td>Handbrake / drift (driving)</td></tr>
       <tr><td>M</td><td>City map</td></tr>
-      <tr><td>N</td><td>Music on / off</td></tr>
+      <tr><td>N</td><td>Radio station (Paloma FM / Ocean 98 / Night Drive)</td></tr>
       <tr><td>Esc</td><td>Pause</td></tr>
     </table>
     <div class="btn-row"><button id="btn-controls-close">Close</button></div>
@@ -139,6 +163,7 @@
 <script src="src/entities/trafficSystem.js"></script>
 <script src="src/entities/pedestrianSystem.js"></script>
 <script src="src/entities/policeSystem.js"></script>
+<script src="src/entities/helicopterSystem.js"></script>
 <script src="src/gameplay/combatSystem.js"></script>
 <script src="src/gameplay/missionManager.js"></script>
 <script src="src/gameplay/saveSystem.js"></script>

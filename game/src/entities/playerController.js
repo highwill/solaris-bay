@@ -28,11 +28,11 @@ window.SB = window.SB || {};
     var P = {
       mesh: group, gun: gun,
       pos: group.position,
-      yaw: CFG.PLAYER_START.yaw, pitch: 0.32,
+      yaw: CFG.PLAYER_START.yaw, pitch: 0.05,
       hp: CFG.PLAYER.hp, armor: 0,
       onFoot: true, car: null,
       weapon: 'pistol',
-      weapons: { pistol: { owned: true, mag: 12, reserve: -1 } },
+      weapons: { fists: { owned: true, mag: 0, reserve: -1 }, pistol: { owned: true, mag: 12, reserve: -1 } },
       magAmmo: 12, reloading: 0,
       lastShot: -9, dead: false,
       moveBob: 0,
@@ -103,10 +103,11 @@ window.SB = window.SB || {};
           group.position.y = Math.abs(Math.sin(P.moveBob)) * 0.06;
           group.rotation.y = Math.atan2(fx, fz);
         }
-        // weapon keys
-        if (keys['Digit1']) switchWeapon('pistol');
-        if (keys['Digit2']) switchWeapon('smg');
-        if (keys['Digit3']) switchWeapon('shotgun');
+        // weapon keys: 1 fists, 2 pistol, 3 SMG, 4 shotgun
+        if (keys['Digit1']) switchWeapon('fists');
+        if (keys['Digit2']) switchWeapon('pistol');
+        if (keys['Digit3']) switchWeapon('smg');
+        if (keys['Digit4']) switchWeapon('shotgun');
         if (keys['KeyR']) SB.combat.reload(G);
         if (G.mouseDown) SB.combat.playerShoot(G);
       } else if (P.car) {
@@ -145,7 +146,20 @@ window.SB = window.SB || {};
       // keep camera out of buildings: clamp above ground, simple raycast-free push
       if (camPos.y < 1.2) camPos.y = 1.2;
       G.camera.position.copy(camPos);
-      camTarget.set(P.pos.x, P.pos.y + 1.6, P.pos.z);
+      // on foot the camera aims at a point ahead of the player (so the
+      // crosshair ray stays level enough to hit targets at 10-40m);
+      // in a car it tracks the vehicle.
+      if (P.onFoot) {
+        var fwdX = -Math.sin(P.yaw), fwdZ = -Math.cos(P.yaw);
+        var aimDist = 12;
+        camTarget.set(
+          P.pos.x + fwdX * aimDist,
+          P.pos.y + 1.5 + Math.tan(P.pitch) * aimDist,
+          P.pos.z + fwdZ * aimDist
+        );
+      } else {
+        camTarget.set(P.pos.x, P.pos.y + 1.6, P.pos.z);
+      }
       G.camera.lookAt(camTarget);
     }
 

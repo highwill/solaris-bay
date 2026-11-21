@@ -146,6 +146,33 @@ window.SB = window.SB || {};
     return tex(c);
   }
 
+  // Neon sign: glowing text on transparency, for tower tops and facades.
+  function neonTexture(text, color) {
+    var c = makeCanvas(512, 128), ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, 512, 128);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 64px Arial, sans-serif';
+    ctx.shadowColor = color; ctx.shadowBlur = 26;
+    ctx.fillStyle = color;
+    ctx.fillText(text, 256, 64);
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, 256, 64);
+    return tex(c);
+  }
+
+  // Striped awning canvas (miramar shopfronts).
+  function awningTexture(c1, c2) {
+    var c = makeCanvas(128, 64), ctx = c.getContext('2d');
+    for (var x = 0; x < 128; x += 16) {
+      ctx.fillStyle = (x / 16) % 2 === 0 ? c1 : c2;
+      ctx.fillRect(x, 0, 16, 64);
+    }
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, 52, 128, 12);
+    return tex(c);
+  }
+
   SB.textures = {
     asphalt: asphaltTexture,
     sidewalk: sidewalkTexture,
@@ -155,5 +182,7 @@ window.SB = window.SB || {};
     container: containerTexture,
     sign: signTexture,
     crosswalk: crosswalkTexture,
+    neon: neonTexture,
+    awning: awningTexture,
   };
 })();

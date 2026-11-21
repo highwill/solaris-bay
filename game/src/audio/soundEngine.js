@@ -92,10 +92,38 @@ window.SB = window.SB || {};
       }
     }
 
-    // Simple synthwave loop: Am – F – C – G bass + pad stab.
-    var CHORDS = [[110, 130.8, 164.8], [87.3, 110, 130.8], [130.8, 164.8, 196], [98, 123.5, 146.8]];
+    // Radio stations: synthwave, island groove, night drive. Each has its own
+    // chord set, tempo and song titles; N cycles, the music button too.
+    var STATIONS = [
+      { name: 'PALOMA FM', songs: ['Sunset Drive', 'Neon Palms', 'Miramar Nights', 'Golden Hour'], chords: [[110, 130.8, 164.8], [87.3, 110, 130.8], [130.8, 164.8, 196], [98, 123.5, 146.8]], beatMs: 250 },
+      { name: 'OCEAN 98', songs: ['Island Breeze', 'Coconut Run', 'Tide Line', 'Beach Comber'], chords: [[98, 123.5, 146.8], [110, 138.6, 164.8], [87.3, 110, 130.8], [123.5, 146.8, 174.6]], beatMs: 320 },
+      { name: 'NIGHT DRIVE', songs: ['After Midnight', 'Empty Boulevard', 'Headlight Hymn', 'Last Exit'], chords: [[82.4, 98, 123.5], [73.4, 87.3, 110], [98, 116.5, 146.8], [87.3, 103.8, 130.8]], beatMs: 210 },
+    ];
+    var stationIdx = -1; // -1 = radio off
+    function station() { return stationIdx >= 0 ? STATIONS[stationIdx] : null; }
+    function cycleStation() {
+      // cycle: OFF -> PALOMA FM -> OCEAN 98 -> NIGHT DRIVE -> OFF
+      stationIdx++;
+      if (stationIdx >= STATIONS.length) stationIdx = -1;
+      var st = station();
+      musicOn = !!st;
+      if (musicOn && ensure()) {
+        if (musicTimer) clearInterval(musicTimer);
+        musicTimer = setInterval(musicTick, st.beatMs);
+      } else if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+      return st ? st.name : 'OFF';
+    }
+    function stationName() { var st = station(); return st ? st.name : 'RADIO OFF'; }
+    function songTitle() {
+      var st = station();
+      if (!st) return '';
+      return st.songs[Math.floor(step / 64) % st.songs.length];
+    }
     function musicTick() {
       if (!ctx || !musicOn || muted) return;
+      var st = station();
+      if (!st) return;
+      var CHORDS = st.chords;
       var chord = CHORDS[Math.floor(step / 8) % 4];
       var beat = step % 8;
       if (beat === 0 || beat === 4) {
@@ -119,9 +147,12 @@ window.SB = window.SB || {};
     }
 
     function setMusic(on) {
+      if (on && stationIdx < 0) stationIdx = 0;
+      if (!on) stationIdx = -1;
       musicOn = on;
       if (on && ensure()) {
-        if (!musicTimer) musicTimer = setInterval(musicTick, 250);
+        if (musicTimer) clearInterval(musicTimer);
+        musicTimer = setInterval(musicTick, station().beatMs);
       } else if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
     }
 
@@ -139,6 +170,7 @@ window.SB = window.SB || {};
       uiClick: function () { blip(740, 0.06, 'sine', 0.15); },
       missionOk: function () { [523, 659, 784].forEach(function (f, i) { setTimeout(function () { blip(f, 0.16, 'sine', 0.22); }, i * 110); }); },
       setMusic: setMusic,
+      cycleStation: cycleStation, stationName: stationName, songTitle: songTitle,
       toggleMute: function () { muted = !muted; if (master) master.gain.value = muted ? 0 : 0.5; return muted; },
       isMuted: function () { return muted; },
     };

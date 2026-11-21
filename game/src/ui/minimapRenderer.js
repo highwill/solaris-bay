@@ -15,6 +15,11 @@ window.SB = window.SB || {};
     }
 
     function draw() {
+      // circular radar: clip everything to a circle
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(S / 2, S / 2, S / 2 - 1, 0, Math.PI * 2);
+      ctx.clip();
       ctx.clearRect(0, 0, S, S);
       ctx.fillStyle = '#10151c';
       ctx.fillRect(0, 0, S, S);
@@ -37,6 +42,25 @@ window.SB = window.SB || {};
       ctx.fillStyle = 'rgba(122,156,196,0.18)';
       var d1 = toMap(-180, -180), d2 = toMap(180, 180);
       ctx.fillRect(d1[0], d1[1], d2[0] - d1[0], d2[1] - d1[1]);
+      // search zone when the helicopter is hunting (3+ stars)
+      if (G.wanted >= 3) {
+        var P0 = G.player.P;
+        var pc = toMap(P0.pos.x, P0.pos.z);
+        ctx.strokeStyle = 'rgba(255,45,45,0.8)'; ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath(); ctx.arc(pc[0], pc[1], 120 / (HALF * 2) * S, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // route line: player -> mission target
+      var M = G.missions.M;
+      if (M.target) {
+        var pp0 = toMap(G.player.P.pos.x, G.player.P.pos.z);
+        var mp0 = toMap(M.target.x, M.target.z);
+        ctx.strokeStyle = 'rgba(255,215,106,0.9)'; ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.moveTo(pp0[0], pp0[1]); ctx.lineTo(mp0[0], mp0[1]); ctx.stroke();
+        ctx.setLineDash([]);
+      }
       // markers (armory / spray / safehouse)
       ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center';
       Object.keys(SB.CONFIG.MARKERS).forEach(function (k) {
@@ -89,9 +113,10 @@ window.SB = window.SB || {};
       ctx.moveTo(0, -7); ctx.lineTo(5, 6); ctx.lineTo(0, 3); ctx.lineTo(-5, 6); ctx.closePath();
       ctx.fill(); ctx.stroke();
       ctx.restore();
-      // border
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
-      ctx.strokeRect(1, 1, S - 2, S - 2);
+      ctx.restore(); // end circular clip
+      // circular border
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(S / 2, S / 2, S / 2 - 1, 0, Math.PI * 2); ctx.stroke();
     }
 
     return { draw: draw };

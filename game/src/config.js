@@ -42,10 +42,20 @@ window.SB = window.SB || {};
     },
 
     WEAPONS: {
+      fists:   { label: 'Fists',   dmg: 15, rate: 0.45, mag: 0,   reload: 0,   spread: 0,     auto: false, price: 0,    ammoPrice: 0,   range: 2.6 },
       pistol:  { label: 'Pistol',  dmg: 34, rate: 0.30, mag: 12,  reload: 1.1, spread: 0.012, auto: false, price: 0,    ammoPrice: 0,   range: 110 },
       smg:     { label: 'SMG',     dmg: 17, rate: 0.105, mag: 30, reload: 1.4, spread: 0.035, auto: true,  price: 1200, ammoPrice: 150, range: 90 },
       shotgun: { label: 'Shotgun', dmg: 9,  rate: 0.90, mag: 6,   reload: 2.0, spread: 0.075, auto: false, price: 1800, ammoPrice: 120, range: 55, pellets: 6 },
     },
+    // Respect ranks: earned from missions (+100) and taking down guards/officers (+10).
+    RANKS: [
+      { name: 'ROOKIE',      min: 0 },
+      { name: 'STREET',      min: 200 },
+      { name: 'FIXER',       min: 500 },
+      { name: 'SHOT CALLER', min: 1000 },
+    ],
+    // Stage count per mission (for the HUD mission panel segments).
+    MISSION_STAGES: [2, 2, 2, 2, 3],
     AMMO_BOX: { smg: 120, shotgun: 24 },
 
     PRICES: { spray: 200, armor: 300, health: 150 },

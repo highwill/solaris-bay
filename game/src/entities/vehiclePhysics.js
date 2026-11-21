@@ -41,6 +41,28 @@ window.SB = window.SB || {};
     cabin.position.set(0, 1.1, -L * 0.05); cabin.castShadow = true; g.add(cabin);
     var nose = new THREE.Mesh(new THREE.BoxGeometry(W * 0.94, 0.34, 0.5), bodyMat);
     nose.position.set(0, 0.5, L / 2 - 0.1); g.add(nose);
+    // class silhouettes: Veloce GT gets a rear spoiler + low stance,
+    // the armored van a tall armored box, the sedan a roof rack.
+    if (type === 'veloce') {
+      var spoiler = new THREE.Mesh(new THREE.BoxGeometry(W * 0.9, 0.09, 0.5), trimMat);
+      spoiler.position.set(0, 1.42, -L / 2 + 0.28); spoiler.castShadow = true; g.add(spoiler);
+      var strutL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.1), trimMat);
+      strutL.position.set(-W / 3, 1.26, -L / 2 + 0.28); g.add(strutL);
+      var strutR = strutL.clone(); strutR.position.x = W / 3; g.add(strutR);
+      var skirt = new THREE.Mesh(new THREE.BoxGeometry(W * 1.02, 0.14, L * 0.9), trimMat);
+      skirt.position.set(0, 0.3, 0); g.add(skirt);
+    } else if (type === 'van') {
+      var boxBody = new THREE.Mesh(new THREE.BoxGeometry(W * 0.96, 1.15, L * 0.62), bodyMat);
+      boxBody.position.set(0, 1.25, -L * 0.14); boxBody.castShadow = true; g.add(boxBody);
+      var stripe = new THREE.Mesh(new THREE.BoxGeometry(W * 0.98, 0.16, L * 0.64), new THREE.MeshStandardMaterial({ color: 0x2c2c30, roughness: 0.8 }));
+      stripe.position.set(0, 0.95, -L * 0.14); g.add(stripe);
+    } else if (type === 'sedan') {
+      var rack = new THREE.Mesh(new THREE.BoxGeometry(W * 0.6, 0.08, L * 0.3), trimMat);
+      rack.position.set(0, 1.42, -L * 0.05); g.add(rack);
+    }
+    // front grille
+    var grille = new THREE.Mesh(new THREE.BoxGeometry(W * 0.6, 0.18, 0.06), trimMat);
+    grille.position.set(0, 0.52, L / 2 + 0.14); g.add(grille);
     // wheels
     var wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 10);
     var wheels = [];
@@ -79,7 +101,7 @@ window.SB = window.SB || {};
     g.rotation.y = heading;
     G.scene.add(g);
 
-    return {
+    var car = {
       mesh: g, type: type, def: def, heading: heading,
       vel: new THREE.Vector3(0, 0, 0),
       steer: 0, speed: 0, hp: def.hp, maxHp: def.hp,
@@ -87,6 +109,11 @@ window.SB = window.SB || {};
       lightbar: lightbar, barRed: barRed, barBlue: barBlue, spot: spot,
       lastHitAt: -10, stuckAt: 0,
     };
+    // raycast hit resolution in playerShoot walks up from the hit child
+    // mesh to the object carrying carRef — without this, car shots
+    // register hits but damage nothing
+    g.userData.carRef = car;
+    return car;
   }
 
   // input: {throttle (-1..1), steer (-1..1), handbrake (bool)}
@@ -145,9 +172,55 @@ window.SB = window.SB || {};
     car.wheels.forEach(function (w, i) { w.rotation.x += spin; if (i < 2) w.rotation.y = car.steer * 0.42; });
     // headlights at night
     car.spot.intensity = (G.isNight || G.goldHour > 0.4) ? 1.6 : 0;
+    // damage smoke: a hurt car smokes from the hood; a wrecked one keeps smoking
+    var hurt = car.wrecked || car.hp < car.maxHp * 0.45;
+    if (hurt && SB.combat && G.time - (car._smokeT || -99) > 0.4) {
+      car._smokeT = G.time;
+      var hp0 = car.mesh.position.clone();
+      hp0.x += Math.sin(car.heading) * 1.6; hp0.z += Math.cos(car.heading) * 1.6; hp0.y = 1.1;
+      SB.combat.burst(G, hp0, car.wrecked ? 0x555555 : 0x999999, 2, 1.6);
+    }
+    // skid marks while drifting (handbrake at speed), pooled on G
+    if (input.handbrake && car.speed > 8 && G.time - (car._skidT || -99) > 0.12) {
+      car._skidT = G.time;
+      addSkid(G, car);
+    }
+  }
+
+  // Skid marks: dark decals at the rear wheels, fading out over ~6s.
+  var skidMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a, transparent: true, opacity: 0.5, depthWrite: false });
+  function addSkid(G, car) {
+    if (!G.skids) G.skids = [];
+    if (G.skids.length > 48) {
+      var old = G.skids.shift();
+      G.scene.remove(old.mesh);
+    }
+    var geo = new THREE.PlaneGeometry(0.5, 2.4);
+    var m = new THREE.Mesh(geo, skidMat.clone());
+    m.rotation.x = -Math.PI / 2;
+    m.rotation.z = car.heading;
+    var side = (G.skids.length % 2 === 0) ? -0.8 : 0.8;
+    var rx = Math.cos(car.heading), rz = -Math.sin(car.heading);
+    m.position.set(
+      car.mesh.position.x - Math.sin(car.heading) * 1.4 + rx * side, 0.06,
+      car.mesh.position.z - Math.cos(car.heading) * 1.4 + rz * side
+    );
+    G.scene.add(m);
+    G.skids.push({ mesh: m, life: 6 });
+  }
+
+  function updateSkids(G, dt) {
+    if (!G.skids) return;
+    for (var i = G.skids.length - 1; i >= 0; i--) {
+      var s = G.skids[i];
+      s.life -= dt;
+      if (s.life <= 0) { G.scene.remove(s.mesh); G.skids.splice(i, 1); }
+      else s.mesh.material.opacity = Math.min(0.5, s.life / 6 * 0.5);
+    }
   }
 
   SB.collideCircle = collideCircle;
   SB.createCar = createCar;
   SB.stepCar = stepCar;
+  SB.updateSkids = updateSkids;
 })();

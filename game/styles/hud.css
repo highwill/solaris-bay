@@ -22,8 +22,66 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1526; f
 #district { margin-top: 4px; font-size: 20px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); transition: opacity 0.8s; }
 
 #top-right { position: absolute; top: 14px; right: 14px; text-align: right; }
-#minimap { border: 2px solid rgba(255,255,255,0.5); border-radius: 4px; background: #10151c; box-shadow: 0 2px 10px rgba(0,0,0,0.6); }
+#minimap { border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; background: #10151c; box-shadow: 0 2px 10px rgba(0,0,0,0.6); }
 #speed { font-size: 22px; font-weight: bold; margin-top: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+
+#clock { margin-top: 4px; font-size: 15px; font-weight: bold; color: #ffe9a8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+
+/* rank bar */
+#rank-bar { margin-top: 8px; font-size: 12px; font-weight: bold; }
+#rank-bar .bar.small { width: 190px; height: 9px; margin: 3px 0; }
+.fill.rank { background: linear-gradient(90deg, #b8860b, #ffd76a); width: 0%; }
+#rank-rp { color: #ffd76a; font-size: 11px; }
+
+/* mission panel */
+#mission-panel { margin-top: 10px; width: 300px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,215,106,0.6); border-radius: 5px; padding: 8px 10px; text-align: left; }
+#mission-title { font-size: 14px; font-weight: bold; color: #ffd76a; margin-bottom: 5px; }
+#mission-stages { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+#mission-stages .seg { display: inline-block; width: 26px; height: 7px; background: rgba(255,255,255,0.25); border-radius: 2px; }
+#mission-stages .seg.done { background: #2ecc71; }
+#mission-stages .seg.cur { background: #ffd76a; }
+#mission-stages .stage-label { font-size: 11px; color: #fff; margin-left: 6px; }
+#mission-timer { font-size: 15px; font-weight: bold; color: #ff8a7a; }
+#mission-next { font-size: 12px; color: #fff; margin-top: 3px; line-height: 1.35; }
+
+/* dispatch panel */
+#dispatch-panel { margin-top: 8px; width: 240px; margin-left: auto; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,80,80,0.6); border-radius: 5px; padding: 7px 9px; text-align: left; }
+.dispatch-head { font-size: 12px; font-weight: bold; color: #ff8a7a; letter-spacing: 1px; margin-bottom: 5px; }
+.dispatch-row { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; padding: 2px 0; }
+.du-name { color: #fff; font-weight: bold; }
+.du-state { font-weight: bold; }
+.du-state.pursuit { color: #ffd76a; }
+.du-state.ramming { color: #ff5c3c; }
+.du-state.roadblock { color: #ff8a7a; }
+.du-state.spotlight { color: #7ad9ff; }
+.du-dist { color: #9aa7b5; }
+
+/* vehicle panel */
+#vehicle-panel { margin-top: 8px; width: 240px; margin-left: auto; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.4); border-radius: 5px; padding: 7px 9px; text-align: left; }
+#vehicle-name { font-size: 14px; font-weight: bold; color: #ffe9a8; }
+#vehicle-panel .bar.small { width: 100%; height: 9px; margin: 4px 0; }
+.fill.cond { background: linear-gradient(90deg, #27ae60, #2ecc71); width: 100%; }
+#vehicle-gear { font-size: 12px; color: #fff; font-weight: bold; }
+#vehicle-cond-text { font-size: 11px; color: #9dff8a; font-weight: bold; }
+
+/* weapon slots */
+#weapon-slots { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 6px; }
+.wslot { width: 108px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.35); border-radius: 4px; padding: 5px 7px; font-size: 11px; }
+.wslot.active { border-color: #ffd76a; background: rgba(60,45,10,0.75); }
+.wslot.locked { opacity: 0.45; }
+.wslot .wkey { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 3px; padding: 0 4px; margin-right: 5px; font-weight: bold; }
+.wslot .wname { font-weight: bold; }
+.wslot .wammo { display: block; margin-top: 2px; color: #ffe9a8; }
+
+/* dialogue with portrait */
+#dialogue { position: absolute; left: 14px; bottom: 118px; display: flex; gap: 10px; align-items: flex-start; max-width: 460px; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,215,106,0.6); border-radius: 6px; padding: 8px 10px; }
+#portrait { width: 64px; height: 64px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.4); flex: none; }
+.dialogue-body { text-align: left; }
+#dialogue-name { font-size: 12px; font-weight: bold; color: #ffd76a; letter-spacing: 1px; margin-bottom: 3px; }
+#dialogue-text { font-size: 14px; font-style: italic; line-height: 1.4; color: #fff; }
+
+/* radio line */
+#radio-line { position: absolute; right: 14px; bottom: 64px; font-size: 13px; font-weight: bold; color: #7ad9ff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
 
 #objective { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); font-size: 17px; font-weight: bold; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,215,106,0.7); color: #ffd76a; padding: 8px 16px; border-radius: 4px; max-width: 80%; text-align: center; }
 #subtitle { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); font-size: 16px; font-style: italic; background: rgba(0,0,0,0.6); color: #fff; padding: 7px 14px; border-radius: 4px; max-width: 82%; text-align: center; display: none; }
